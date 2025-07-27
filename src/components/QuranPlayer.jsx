@@ -5,8 +5,6 @@ const TRANSLATION_OPTIONS = ['en.asad', 'en.pickthall', 'en.sahih'];
 const TRANSLITERATION_EDITION = 'en.transliteration';
 
 import { t } from '../i18n';
-
-
 export default function QuranPlayer({
   surahNumber,
   currentAyahIndex,
@@ -276,7 +274,6 @@ export default function QuranPlayer({
             </div>
             <div style={{ marginTop: '0.5rem' }}>
               <label>{t(lang, 'range')}: </label>
-
               <input
                 type="number"
                 min="1"
@@ -301,7 +298,6 @@ export default function QuranPlayer({
                   onChange={(e) => setLoopRange(e.target.checked)}
                 />{' '}
                 {t(lang, 'loopRange')}
-
               </label>
             </div>
           </div>

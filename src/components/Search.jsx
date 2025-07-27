@@ -39,8 +39,10 @@ export default function Search({ onSelect, lang }) {
         />
         <button type="submit">{t(lang, 'searchButton')}</button>
       </form>
-      {searched && results.length === 0 && <p>{t(lang, 'noResults')}</p>}
-
+      {searched && results.length === 0 && (
+        <p>{t(lang, 'noResults')}</p>
+      )}
+      <ul>
 
         {results.map((r, idx) => (
           <li key={idx}>
