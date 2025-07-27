@@ -41,5 +41,7 @@ npm run preview
 
 ## Usage
 
-The app now includes a simple Quran player that fetches surah and ayah data from [Al Quran Cloud](https://alquran.cloud/api) and allows audio playback with navigation controls. Modify `src/components/QuranPlayer.jsx` to extend the functionality further.
+The app now includes a simple Quran player that fetches surah and ayah data from [Al Quran Cloud](https://alquran.cloud/api) and allows audio playback with navigation controls. The player also supports selecting an English translation edition so the corresponding text appears alongside the Arabic verses. Modify `src/components/QuranPlayer.jsx` to extend the functionality further.
+
+You can also switch between light and dark themes and adjust the base font size using the controls at the top of the page.
 
