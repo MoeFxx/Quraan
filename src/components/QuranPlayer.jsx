@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 
 const API_BASE = 'https://api.alquran.cloud/v1';
+const TRANSLATION_OPTIONS = ['en.asad', 'en.pickthall', 'en.sahih'];
 
 export default function QuranPlayer({
   surahNumber,
@@ -9,6 +10,12 @@ export default function QuranPlayer({
   onAyahChange,
 }) {
   const [surahs, setSurahs] = useState([]);
+  const [surahNumber, setSurahNumber] = useState(1);
+  const [translationEdition, setTranslationEdition] = useState('en.asad');
+  const [ayahs, setAyahs] = useState([]);
+  const [translationAyahs, setTranslationAyahs] = useState([]);
+  const [currentAyahIndex, setCurrentAyahIndex] = useState(0);
+
   const [ayahs, setAyahs] = useState([]);
   const audioRef = useRef(null);
   const [playbackRate, setPlaybackRate] = useState(1);
@@ -54,9 +61,16 @@ export default function QuranPlayer({
   }, []);
 
   useEffect(() => {
-    fetch(`${API_BASE}/surah/${surahNumber}/ar.alafasy`)
+    fetch(
+      `${API_BASE}/surah/${surahNumber}/editions/ar.alafasy,${translationEdition}`
+    )
       .then((res) => res.json())
       .then((data) => {
+        if (Array.isArray(data.data) && data.data.length >= 2) {
+          setAyahs(data.data[0].ayahs || []);
+          setTranslationAyahs(data.data[1].ayahs || []);
+          setCurrentAyahIndex(0);
+
         if (data.data && data.data.ayahs) {
           setAyahs(data.data.ayahs);
           onAyahChange(0);
@@ -71,7 +85,7 @@ export default function QuranPlayer({
         }
       })
       .catch((err) => console.error('Failed to fetch ayahs:', err));
-  }, [surahNumber]);
+  }, [surahNumber, translationEdition]);
 
   const playAudio = () => {
     audioRef.current?.play();
@@ -154,10 +168,29 @@ export default function QuranPlayer({
           ))}
         </select>
       </div>
+      <div style={{ marginTop: '0.5rem' }}>
+        <label htmlFor="edition-select">Edition:</label>{' '}
+        <select
+          id="edition-select"
+          value={translationEdition}
+          onChange={(e) => setTranslationEdition(e.target.value)}
+        >
+          {TRANSLATION_OPTIONS.map((e) => (
+            <option key={e} value={e}>
+              {e}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {ayahs.length > 0 && (
         <div style={{ marginTop: '1rem' }}>
           <p>{ayahs[currentAyahIndex].text}</p>
+          {translationAyahs[currentAyahIndex] && (
+            <p style={{ fontStyle: 'italic' }}>
+              {translationAyahs[currentAyahIndex].text}
+            </p>
+          )}
           <audio
             ref={audioRef}
             controls
