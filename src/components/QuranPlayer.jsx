@@ -11,6 +11,24 @@ export default function QuranPlayer({
   const [surahs, setSurahs] = useState([]);
   const [ayahs, setAyahs] = useState([]);
   const audioRef = useRef(null);
+  const [playbackRate, setPlaybackRate] = useState(1);
+  const [loopSingle, setLoopSingle] = useState(false);
+  const [loopRange, setLoopRange] = useState(false);
+  const [rangeStart, setRangeStart] = useState(1);
+  const [rangeEnd, setRangeEnd] = useState(1);
+  const [autoPlayNext, setAutoPlayNext] = useState(false);
+
+  useEffect(() => {
+    if (loopSingle) {
+      setLoopRange(false);
+    }
+  }, [loopSingle]);
+
+  useEffect(() => {
+    if (loopRange) {
+      setLoopSingle(false);
+    }
+  }, [loopRange]);
 
   // Load saved state on mount so the user can resume where they left off
   useEffect(() => {
@@ -74,6 +92,25 @@ export default function QuranPlayer({
     }
   };
 
+  const handleAudioEnded = () => {
+    if (loopSingle) {
+      repeatAyah();
+    } else if (
+      loopRange &&
+      rangeStart >= 1 &&
+      rangeEnd >= rangeStart &&
+      rangeStart <= ayahs.length
+    ) {
+      if (currentAyahIndex < rangeEnd - 1 && currentAyahIndex < ayahs.length - 1) {
+        setAutoPlayNext(true);
+        setCurrentAyahIndex((i) => i + 1);
+      } else {
+        setAutoPlayNext(true);
+        setCurrentAyahIndex(rangeStart - 1);
+      }
+    }
+  };
+
   // Persist surah and ayah index so progress is saved between sessions
   useEffect(() => {
     localStorage.setItem('surahNumber', String(surahNumber));
@@ -86,8 +123,19 @@ export default function QuranPlayer({
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.load();
+      audioRef.current.playbackRate = playbackRate;
+      if (autoPlayNext) {
+        audioRef.current.play();
+      }
     }
-  }, [currentAyahIndex]);
+    setAutoPlayNext(false);
+  }, [currentAyahIndex, autoPlayNext, playbackRate]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.playbackRate = playbackRate;
+    }
+  }, [playbackRate]);
 
   return (
     <div>
@@ -114,7 +162,22 @@ export default function QuranPlayer({
             ref={audioRef}
             controls
             src={ayahs[currentAyahIndex].audio}
+            onEnded={handleAudioEnded}
           />
+          <div style={{ marginTop: '0.5rem' }}>
+            <label htmlFor="speed-select">Speed:</label>{' '}
+            <select
+              id="speed-select"
+              value={playbackRate}
+              onChange={(e) => setPlaybackRate(Number(e.target.value))}
+            >
+              <option value={0.5}>0.5x</option>
+              <option value={1}>1x</option>
+              <option value={1.25}>1.25x</option>
+              <option value={1.5}>1.5x</option>
+              <option value={2}>2x</option>
+            </select>
+          </div>
           <div style={{ marginTop: '0.5rem' }}>
             <button onClick={prevAyah} disabled={currentAyahIndex === 0}>
               Previous
@@ -127,6 +190,44 @@ export default function QuranPlayer({
               Next
             </button>{' '}
             <button onClick={repeatAyah}>Repeat</button>
+          </div>
+          <div style={{ marginTop: '0.5rem' }}>
+            <label>
+              <input
+                type="checkbox"
+                checked={loopSingle}
+                onChange={(e) => setLoopSingle(e.target.checked)}
+              />{' '}
+              Loop current ayah
+            </label>
+          </div>
+          <div style={{ marginTop: '0.5rem' }}>
+            <label>Range: </label>
+            <input
+              type="number"
+              min="1"
+              max={ayahs.length}
+              value={rangeStart}
+              onChange={(e) => setRangeStart(Number(e.target.value))}
+              style={{ width: '4rem' }}
+            />{' '}
+            -{' '}
+            <input
+              type="number"
+              min="1"
+              max={ayahs.length}
+              value={rangeEnd}
+              onChange={(e) => setRangeEnd(Number(e.target.value))}
+              style={{ width: '4rem' }}
+            />{' '}
+            <label>
+              <input
+                type="checkbox"
+                checked={loopRange}
+                onChange={(e) => setLoopRange(e.target.checked)}
+              />{' '}
+              Loop range
+            </label>
           </div>
         </div>
       )}
