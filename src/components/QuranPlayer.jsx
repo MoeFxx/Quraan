@@ -2,11 +2,14 @@ import { useEffect, useState, useRef } from 'react';
 
 const API_BASE = 'https://api.alquran.cloud/v1';
 
-export default function QuranPlayer() {
+export default function QuranPlayer({
+  surahNumber,
+  currentAyahIndex,
+  onSurahChange,
+  onAyahChange,
+}) {
   const [surahs, setSurahs] = useState([]);
-  const [surahNumber, setSurahNumber] = useState(1);
   const [ayahs, setAyahs] = useState([]);
-  const [currentAyahIndex, setCurrentAyahIndex] = useState(0);
   const audioRef = useRef(null);
 
   // Load saved state on mount so the user can resume where they left off
@@ -38,6 +41,8 @@ export default function QuranPlayer() {
       .then((data) => {
         if (data.data && data.data.ayahs) {
           setAyahs(data.data.ayahs);
+          onAyahChange(0);
+
           const savedSurah = Number(localStorage.getItem('surahNumber'));
           const savedIndex = Number(localStorage.getItem('currentAyahIndex'));
           if (surahNumber === savedSurah && !Number.isNaN(savedIndex)) {
@@ -55,11 +60,11 @@ export default function QuranPlayer() {
   };
 
   const nextAyah = () => {
-    setCurrentAyahIndex((i) => Math.min(i + 1, ayahs.length - 1));
+    onAyahChange(Math.min(currentAyahIndex + 1, ayahs.length - 1));
   };
 
   const prevAyah = () => {
-    setCurrentAyahIndex((i) => Math.max(i - 1, 0));
+    onAyahChange(Math.max(currentAyahIndex - 1, 0));
   };
 
   const repeatAyah = () => {
@@ -92,7 +97,7 @@ export default function QuranPlayer() {
         <select
           id="surah-select"
           value={surahNumber}
-          onChange={(e) => setSurahNumber(Number(e.target.value))}
+          onChange={(e) => onSurahChange(Number(e.target.value))}
         >
           {surahs.map((s) => (
             <option key={s.number} value={s.number}>
