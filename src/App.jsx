@@ -31,7 +31,6 @@ export default function App() {
           {theme === 'light' ? 'Dark' : 'Light'} Mode
         </button>
       </div>
-      <QuranPlayer />
 
       <Search onSelect={({ surah, ayah }) => {
         setSurahNumber(surah);

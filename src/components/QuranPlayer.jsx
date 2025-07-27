@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 
 const API_BASE = 'https://api.alquran.cloud/v1';
 const TRANSLATION_OPTIONS = ['en.asad', 'en.pickthall', 'en.sahih'];
+const TRANSLITERATION_EDITION = 'en.transliteration';
 
 export default function QuranPlayer({
   surahNumber,
@@ -10,15 +11,13 @@ export default function QuranPlayer({
   onAyahChange,
 }) {
   const [surahs, setSurahs] = useState([]);
-  const [surahNumber, setSurahNumber] = useState(1);
   const [translationEdition, setTranslationEdition] = useState('en.asad');
+  const [showTransliteration, setShowTransliteration] = useState(false);
   const [ayahs, setAyahs] = useState([]);
   const [translationAyahs, setTranslationAyahs] = useState([]);
-  const [currentAyahIndex, setCurrentAyahIndex] = useState(0);
+  const [translitAyahs, setTranslitAyahs] = useState([]);
   const [errorMessage, setErrorMessage] = useState('');
-=======
 
-  const [ayahs, setAyahs] = useState([]);
   const audioRef = useRef(null);
   const [playbackRate, setPlaybackRate] = useState(1);
   const [loopSingle, setLoopSingle] = useState(false);
@@ -39,17 +38,17 @@ export default function QuranPlayer({
     }
   }, [loopRange]);
 
-  // Load saved state on mount so the user can resume where they left off
+  // Load saved state on mount
   useEffect(() => {
     const savedSurah = Number(localStorage.getItem('surahNumber'));
     const savedIndex = Number(localStorage.getItem('currentAyahIndex'));
     if (!Number.isNaN(savedSurah) && savedSurah > 0) {
-      setSurahNumber(savedSurah);
+      onSurahChange(savedSurah);
     }
     if (!Number.isNaN(savedIndex) && savedIndex >= 0) {
-      setCurrentAyahIndex(savedIndex);
+      onAyahChange(savedIndex);
     }
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetch(`${API_BASE}/surah`)
@@ -62,47 +61,72 @@ export default function QuranPlayer({
       })
       .catch((err) => {
         console.error('Failed to fetch surahs:', err);
-        setErrorMessage(
-          'Unable to load surahs. Please check your connection and try again.'
-        );
+        setErrorMessage('Unable to load surahs. Please check your connection and try again.');
       });
   }, []);
 
   useEffect(() => {
-    fetch(
-      `${API_BASE}/surah/${surahNumber}/editions/ar.alafasy,${translationEdition}`
-    )
+    const editions = [`ar.alafasy`, translationEdition];
+    if (showTransliteration) editions.push(TRANSLITERATION_EDITION);
+    fetch(`${API_BASE}/surah/${surahNumber}/editions/${editions.join(',')}`)
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data.data) && data.data.length >= 2) {
-          setAyahs(data.data[0].ayahs || []);
-          setTranslationAyahs(data.data[1].ayahs || []);
-          setCurrentAyahIndex(0);
-
-        if (data.data && data.data.ayahs) {
-          setAyahs(data.data.ayahs);
-          onAyahChange(0);
-
+        if (Array.isArray(data.data)) {
+          const [audioEd, transEd, translitEd] = data.data;
+          setAyahs(audioEd.ayahs || []);
+          setTranslationAyahs(transEd?.ayahs || []);
+          if (showTransliteration) {
+            setTranslitAyahs(translitEd?.ayahs || []);
+          } else {
+            setTranslitAyahs([]);
+          }
           const savedSurah = Number(localStorage.getItem('surahNumber'));
           const savedIndex = Number(localStorage.getItem('currentAyahIndex'));
           if (surahNumber === savedSurah && !Number.isNaN(savedIndex)) {
-            setCurrentAyahIndex(Math.min(savedIndex, data.data.ayahs.length - 1));
+            onAyahChange(Math.min(savedIndex, (audioEd.ayahs || []).length - 1));
           } else {
-            setCurrentAyahIndex(0);
+            onAyahChange(0);
           }
+          setErrorMessage('');
+        } else if (data.data && data.data.ayahs) {
+          setAyahs(data.data.ayahs);
+          setTranslationAyahs([]);
+          setTranslitAyahs([]);
+          onAyahChange(0);
           setErrorMessage('');
         }
       })
       .catch((err) => {
         console.error('Failed to fetch ayahs:', err);
-        setErrorMessage(
-          'Unable to load verses for this surah. Please try again later.'
-        );
+        setErrorMessage('Unable to load verses for this surah. Please try again later.');
       });
+  }, [surahNumber, translationEdition, showTransliteration, onAyahChange]);
+
+  // Persist progress
+  useEffect(() => {
+    localStorage.setItem('surahNumber', String(surahNumber));
   }, [surahNumber]);
 
-      .catch((err) => console.error('Failed to fetch ayahs:', err));
-  }, [surahNumber, translationEdition]);
+  useEffect(() => {
+    localStorage.setItem('currentAyahIndex', String(currentAyahIndex));
+  }, [currentAyahIndex]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.load();
+      audioRef.current.playbackRate = playbackRate;
+      if (autoPlayNext) {
+        audioRef.current.play();
+      }
+    }
+    setAutoPlayNext(false);
+  }, [currentAyahIndex, autoPlayNext, playbackRate]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.playbackRate = playbackRate;
+    }
+  }, [playbackRate]);
 
   const playAudio = () => {
     audioRef.current?.play();
@@ -134,39 +158,13 @@ export default function QuranPlayer({
     ) {
       if (currentAyahIndex < rangeEnd - 1 && currentAyahIndex < ayahs.length - 1) {
         setAutoPlayNext(true);
-        setCurrentAyahIndex((i) => i + 1);
+        onAyahChange(currentAyahIndex + 1);
       } else {
         setAutoPlayNext(true);
-        setCurrentAyahIndex(rangeStart - 1);
+        onAyahChange(rangeStart - 1);
       }
     }
   };
-
-  // Persist surah and ayah index so progress is saved between sessions
-  useEffect(() => {
-    localStorage.setItem('surahNumber', String(surahNumber));
-  }, [surahNumber]);
-
-  useEffect(() => {
-    localStorage.setItem('currentAyahIndex', String(currentAyahIndex));
-  }, [currentAyahIndex]);
-
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.load();
-      audioRef.current.playbackRate = playbackRate;
-      if (autoPlayNext) {
-        audioRef.current.play();
-      }
-    }
-    setAutoPlayNext(false);
-  }, [currentAyahIndex, autoPlayNext, playbackRate]);
-
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.playbackRate = playbackRate;
-    }
-  }, [playbackRate]);
 
   return (
     <div className="quran-player">
@@ -200,13 +198,27 @@ export default function QuranPlayer({
           ))}
         </select>
       </div>
-
+      <div style={{ marginTop: '0.5rem' }}>
+        <label>
+          <input
+            type="checkbox"
+            checked={showTransliteration}
+            onChange={(e) => setShowTransliteration(e.target.checked)}
+          />{' '}
+          Show transliteration
+        </label>
+      </div>
       {ayahs.length > 0 && (
         <div className="player-section">
           <p>{ayahs[currentAyahIndex].text}</p>
           {translationAyahs[currentAyahIndex] && (
             <p style={{ fontStyle: 'italic' }}>
               {translationAyahs[currentAyahIndex].text}
+            </p>
+          )}
+          {showTransliteration && translitAyahs[currentAyahIndex] && (
+            <p style={{ fontStyle: 'italic' }}>
+              {translitAyahs[currentAyahIndex].text}
             </p>
           )}
           <audio
@@ -216,71 +228,71 @@ export default function QuranPlayer({
             onEnded={handleAudioEnded}
           />
           <div className="controls">
-
-          <div style={{ marginTop: '0.5rem' }}>
-            <label htmlFor="speed-select">Speed:</label>{' '}
-            <select
-              id="speed-select"
-              value={playbackRate}
-              onChange={(e) => setPlaybackRate(Number(e.target.value))}
-            >
-              <option value={0.5}>0.5x</option>
-              <option value={1}>1x</option>
-              <option value={1.25}>1.25x</option>
-              <option value={1.5}>1.5x</option>
-              <option value={2}>2x</option>
-            </select>
-          </div>
-          <div style={{ marginTop: '0.5rem' }}>
-            <button onClick={prevAyah} disabled={currentAyahIndex === 0}>
-              Previous
-            </button>{' '}
-            <button onClick={playAudio}>Play</button>{' '}
-            <button
-              onClick={nextAyah}
-              disabled={currentAyahIndex === ayahs.length - 1}
-            >
-              Next
-            </button>{' '}
-            <button onClick={repeatAyah}>Repeat</button>
-          </div>
-          <div style={{ marginTop: '0.5rem' }}>
-            <label>
+            <div style={{ marginTop: '0.5rem' }}>
+              <label htmlFor="speed-select">Speed:</label>{' '}
+              <select
+                id="speed-select"
+                value={playbackRate}
+                onChange={(e) => setPlaybackRate(Number(e.target.value))}
+              >
+                <option value={0.5}>0.5x</option>
+                <option value={1}>1x</option>
+                <option value={1.25}>1.25x</option>
+                <option value={1.5}>1.5x</option>
+                <option value={2}>2x</option>
+              </select>
+            </div>
+            <div style={{ marginTop: '0.5rem' }}>
+              <button onClick={prevAyah} disabled={currentAyahIndex === 0}>
+                Previous
+              </button>{' '}
+              <button onClick={playAudio}>Play</button>{' '}
+              <button
+                onClick={nextAyah}
+                disabled={currentAyahIndex === ayahs.length - 1}
+              >
+                Next
+              </button>{' '}
+              <button onClick={repeatAyah}>Repeat</button>
+            </div>
+            <div style={{ marginTop: '0.5rem' }}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={loopSingle}
+                  onChange={(e) => setLoopSingle(e.target.checked)}
+                />{' '}
+                Loop current ayah
+              </label>
+            </div>
+            <div style={{ marginTop: '0.5rem' }}>
+              <label>Range: </label>
               <input
-                type="checkbox"
-                checked={loopSingle}
-                onChange={(e) => setLoopSingle(e.target.checked)}
+                type="number"
+                min="1"
+                max={ayahs.length}
+                value={rangeStart}
+                onChange={(e) => setRangeStart(Number(e.target.value))}
+                style={{ width: '4rem' }}
               />{' '}
-              Loop current ayah
-            </label>
-          </div>
-          <div style={{ marginTop: '0.5rem' }}>
-            <label>Range: </label>
-            <input
-              type="number"
-              min="1"
-              max={ayahs.length}
-              value={rangeStart}
-              onChange={(e) => setRangeStart(Number(e.target.value))}
-              style={{ width: '4rem' }}
-            />{' '}
-            -{' '}
-            <input
-              type="number"
-              min="1"
-              max={ayahs.length}
-              value={rangeEnd}
-              onChange={(e) => setRangeEnd(Number(e.target.value))}
-              style={{ width: '4rem' }}
-            />{' '}
-            <label>
+              -{' '}
               <input
-                type="checkbox"
-                checked={loopRange}
-                onChange={(e) => setLoopRange(e.target.checked)}
+                type="number"
+                min="1"
+                max={ayahs.length}
+                value={rangeEnd}
+                onChange={(e) => setRangeEnd(Number(e.target.value))}
+                style={{ width: '4rem' }}
               />{' '}
-              Loop range
-            </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={loopRange}
+                  onChange={(e) => setLoopRange(e.target.checked)}
+                />{' '}
+                Loop range
+              </label>
+            </div>
           </div>
         </div>
       )}

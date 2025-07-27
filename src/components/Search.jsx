@@ -5,6 +5,7 @@ const API_BASE = 'https://api.alquran.cloud/v1';
 export default function Search({ onSelect }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
+  const [searched, setSearched] = useState(false);
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -20,6 +21,7 @@ export default function Search({ onSelect }) {
       } else {
         setResults([]);
       }
+      setSearched(true);
     } catch (err) {
       console.error('Failed to search:', err);
     }
@@ -36,6 +38,7 @@ export default function Search({ onSelect }) {
         />
         <button type="submit">Search</button>
       </form>
+      {searched && results.length === 0 && <p>No results found.</p>}
       <ul>
         {results.map((r, idx) => (
           <li key={idx}>
