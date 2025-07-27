@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import QuranPlayer from './components/QuranPlayer';
+import Search from './components/Search';
 
 export default function App() {
   const [fontSize, setFontSize] = useState(16);
@@ -8,6 +9,9 @@ export default function App() {
   const toggleTheme = () => {
     setTheme((t) => (t === 'light' ? 'dark' : 'light'));
   };
+
+  const [surahNumber, setSurahNumber] = useState(1);
+  const [ayahIndex, setAyahIndex] = useState(0);
 
   return (
     <div className={`app ${theme}-theme`} style={{ fontSize: `${fontSize}px` }}>
@@ -28,6 +32,17 @@ export default function App() {
         </button>
       </div>
       <QuranPlayer />
+
+      <Search onSelect={({ surah, ayah }) => {
+        setSurahNumber(surah);
+        setAyahIndex(ayah);
+      }} />
+      <QuranPlayer
+        surahNumber={surahNumber}
+        currentAyahIndex={ayahIndex}
+        onSurahChange={setSurahNumber}
+        onAyahChange={setAyahIndex}
+      />
     </div>
   );
 }
