@@ -15,6 +15,8 @@ export default function QuranPlayer({
   const [ayahs, setAyahs] = useState([]);
   const [translationAyahs, setTranslationAyahs] = useState([]);
   const [currentAyahIndex, setCurrentAyahIndex] = useState(0);
+  const [errorMessage, setErrorMessage] = useState('');
+=======
 
   const [ayahs, setAyahs] = useState([]);
   const audioRef = useRef(null);
@@ -55,9 +57,15 @@ export default function QuranPlayer({
       .then((data) => {
         if (data.data) {
           setSurahs(data.data);
+          setErrorMessage('');
         }
       })
-      .catch((err) => console.error('Failed to fetch surahs:', err));
+      .catch((err) => {
+        console.error('Failed to fetch surahs:', err);
+        setErrorMessage(
+          'Unable to load surahs. Please check your connection and try again.'
+        );
+      });
   }, []);
 
   useEffect(() => {
@@ -82,8 +90,17 @@ export default function QuranPlayer({
           } else {
             setCurrentAyahIndex(0);
           }
+          setErrorMessage('');
         }
       })
+      .catch((err) => {
+        console.error('Failed to fetch ayahs:', err);
+        setErrorMessage(
+          'Unable to load verses for this surah. Please try again later.'
+        );
+      });
+  }, [surahNumber]);
+
       .catch((err) => console.error('Failed to fetch ayahs:', err));
   }, [surahNumber, translationEdition]);
 
@@ -152,8 +169,9 @@ export default function QuranPlayer({
   }, [playbackRate]);
 
   return (
-    <div>
+    <div className="quran-player">
       <h2>Quran Player</h2>
+      {errorMessage && <p className="error">{errorMessage}</p>}
       <div>
         <label htmlFor="surah-select">Surah:</label>{' '}
         <select
@@ -184,7 +202,7 @@ export default function QuranPlayer({
       </div>
 
       {ayahs.length > 0 && (
-        <div style={{ marginTop: '1rem' }}>
+        <div className="player-section">
           <p>{ayahs[currentAyahIndex].text}</p>
           {translationAyahs[currentAyahIndex] && (
             <p style={{ fontStyle: 'italic' }}>
@@ -197,6 +215,8 @@ export default function QuranPlayer({
             src={ayahs[currentAyahIndex].audio}
             onEnded={handleAudioEnded}
           />
+          <div className="controls">
+
           <div style={{ marginTop: '0.5rem' }}>
             <label htmlFor="speed-select">Speed:</label>{' '}
             <select
