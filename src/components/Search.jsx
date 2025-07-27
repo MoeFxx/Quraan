@@ -43,6 +43,7 @@ export default function Search({ onSelect, lang }) {
         <p>{t(lang, 'noResults')}</p>
       )}
       <ul>
+
         {results.map((r, idx) => (
           <li key={idx}>
             <button
