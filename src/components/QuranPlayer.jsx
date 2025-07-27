@@ -4,11 +4,15 @@ const API_BASE = 'https://api.alquran.cloud/v1';
 const TRANSLATION_OPTIONS = ['en.asad', 'en.pickthall', 'en.sahih'];
 const TRANSLITERATION_EDITION = 'en.transliteration';
 
+import { t } from '../i18n';
+
+
 export default function QuranPlayer({
   surahNumber,
   currentAyahIndex,
   onSurahChange,
   onAyahChange,
+  lang,
 }) {
   const [surahs, setSurahs] = useState([]);
   const [translationEdition, setTranslationEdition] = useState('en.asad');
@@ -61,7 +65,8 @@ export default function QuranPlayer({
       })
       .catch((err) => {
         console.error('Failed to fetch surahs:', err);
-        setErrorMessage('Unable to load surahs. Please check your connection and try again.');
+        setErrorMessage(t(lang, 'unableSurah'));
+
       });
   }, []);
 
@@ -98,7 +103,8 @@ export default function QuranPlayer({
       })
       .catch((err) => {
         console.error('Failed to fetch ayahs:', err);
-        setErrorMessage('Unable to load verses for this surah. Please try again later.');
+        setErrorMessage(t(lang, 'unableAyah'));
+
       });
   }, [surahNumber, translationEdition, showTransliteration, onAyahChange]);
 
@@ -168,10 +174,10 @@ export default function QuranPlayer({
 
   return (
     <div className="quran-player">
-      <h2>Quran Player</h2>
+      <h2>{t(lang, 'quranPlayer')}</h2>
       {errorMessage && <p className="error">{errorMessage}</p>}
       <div>
-        <label htmlFor="surah-select">Surah:</label>{' '}
+        <label htmlFor="surah-select">{t(lang, 'surah')}:</label>{' '}
         <select
           id="surah-select"
           value={surahNumber}
@@ -179,13 +185,13 @@ export default function QuranPlayer({
         >
           {surahs.map((s) => (
             <option key={s.number} value={s.number}>
-              {s.number}. {s.englishName}
+              {s.number}. {lang === 'ar' ? s.name : s.englishName}
             </option>
           ))}
         </select>
       </div>
       <div style={{ marginTop: '0.5rem' }}>
-        <label htmlFor="edition-select">Edition:</label>{' '}
+        <label htmlFor="edition-select">{t(lang, 'edition')}:</label>{' '}
         <select
           id="edition-select"
           value={translationEdition}
@@ -205,7 +211,7 @@ export default function QuranPlayer({
             checked={showTransliteration}
             onChange={(e) => setShowTransliteration(e.target.checked)}
           />{' '}
-          Show transliteration
+          {t(lang, 'showTranslit')}
         </label>
       </div>
       {ayahs.length > 0 && (
@@ -229,7 +235,8 @@ export default function QuranPlayer({
           />
           <div className="controls">
             <div style={{ marginTop: '0.5rem' }}>
-              <label htmlFor="speed-select">Speed:</label>{' '}
+              <label htmlFor="speed-select">{t(lang, 'speed')}:</label>{' '}
+
               <select
                 id="speed-select"
                 value={playbackRate}
@@ -244,16 +251,18 @@ export default function QuranPlayer({
             </div>
             <div style={{ marginTop: '0.5rem' }}>
               <button onClick={prevAyah} disabled={currentAyahIndex === 0}>
-                Previous
+                {t(lang, 'previous')}
               </button>{' '}
-              <button onClick={playAudio}>Play</button>{' '}
+              <button onClick={playAudio}>{t(lang, 'play')}</button>{' '}
+
               <button
                 onClick={nextAyah}
                 disabled={currentAyahIndex === ayahs.length - 1}
               >
-                Next
+                {t(lang, 'next')}
               </button>{' '}
-              <button onClick={repeatAyah}>Repeat</button>
+              <button onClick={repeatAyah}>{t(lang, 'repeat')}</button>
+
             </div>
             <div style={{ marginTop: '0.5rem' }}>
               <label>
@@ -262,11 +271,12 @@ export default function QuranPlayer({
                   checked={loopSingle}
                   onChange={(e) => setLoopSingle(e.target.checked)}
                 />{' '}
-                Loop current ayah
+                {t(lang, 'loopCurrent')}
               </label>
             </div>
             <div style={{ marginTop: '0.5rem' }}>
-              <label>Range: </label>
+              <label>{t(lang, 'range')}: </label>
+
               <input
                 type="number"
                 min="1"
@@ -290,7 +300,8 @@ export default function QuranPlayer({
                   checked={loopRange}
                   onChange={(e) => setLoopRange(e.target.checked)}
                 />{' '}
-                Loop range
+                {t(lang, 'loopRange')}
+
               </label>
             </div>
           </div>

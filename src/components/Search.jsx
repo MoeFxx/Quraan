@@ -1,8 +1,9 @@
 import { useState } from 'react';
+import { t } from '../i18n';
 
 const API_BASE = 'https://api.alquran.cloud/v1';
 
-export default function Search({ onSelect }) {
+export default function Search({ onSelect, lang }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [searched, setSearched] = useState(false);
@@ -28,18 +29,19 @@ export default function Search({ onSelect }) {
   };
 
   return (
-    <div>
+    <div dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       <form onSubmit={handleSearch} style={{ marginBottom: '1rem' }}>
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search Quran"
+          placeholder={t(lang, 'searchPlaceholder')}
         />
-        <button type="submit">Search</button>
+        <button type="submit">{t(lang, 'searchButton')}</button>
       </form>
-      {searched && results.length === 0 && <p>No results found.</p>}
-      <ul>
+      {searched && results.length === 0 && <p>{t(lang, 'noResults')}</p>}
+
+
         {results.map((r, idx) => (
           <li key={idx}>
             <button

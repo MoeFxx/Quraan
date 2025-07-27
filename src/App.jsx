@@ -1,24 +1,30 @@
 import { useState } from 'react';
 import QuranPlayer from './components/QuranPlayer';
 import Search from './components/Search';
+import { t } from './i18n';
 
 export default function App() {
   const [fontSize, setFontSize] = useState(16);
   const [theme, setTheme] = useState('light');
+  const [lang, setLang] = useState('ar');
 
   const toggleTheme = () => {
     setTheme((t) => (t === 'light' ? 'dark' : 'light'));
+  };
+
+  const toggleLang = () => {
+    setLang((l) => (l === 'ar' ? 'en' : 'ar'));
   };
 
   const [surahNumber, setSurahNumber] = useState(1);
   const [ayahIndex, setAyahIndex] = useState(0);
 
   return (
-    <div className={`app ${theme}-theme`} style={{ fontSize: `${fontSize}px` }}>
-      <h1>Hello, Quraan!</h1>
+    <div className={`app ${theme}-theme`} style={{ fontSize: `${fontSize}px` }} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+      <h1>{t(lang, 'heading')}</h1>
       <div className="controls">
         <label>
-          Font Size: {fontSize}px
+          {t(lang, 'fontSize')}: {fontSize}px
           <input
             type="range"
             min="12"
@@ -28,19 +34,26 @@ export default function App() {
           />
         </label>{' '}
         <button onClick={toggleTheme} style={{ marginLeft: '0.5rem' }}>
-          {theme === 'light' ? 'Dark' : 'Light'} Mode
+          {theme === 'light' ? t(lang, 'darkMode') : t(lang, 'lightMode')}
+        </button>{' '}
+        <button onClick={toggleLang} style={{ marginLeft: '0.5rem' }}>
+          {lang === 'ar' ? 'English' : 'العربية'}
         </button>
       </div>
 
-      <Search onSelect={({ surah, ayah }) => {
-        setSurahNumber(surah);
-        setAyahIndex(ayah);
-      }} />
+      <Search
+        lang={lang}
+        onSelect={({ surah, ayah }) => {
+          setSurahNumber(surah);
+          setAyahIndex(ayah);
+        }}
+      />
       <QuranPlayer
         surahNumber={surahNumber}
         currentAyahIndex={ayahIndex}
         onSurahChange={setSurahNumber}
         onAyahChange={setAyahIndex}
+        lang={lang}
       />
     </div>
   );
