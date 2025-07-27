@@ -6,6 +6,7 @@ const TRANSLITERATION_EDITION = 'en.transliteration';
 
 import { t } from '../i18n';
 
+
 export default function QuranPlayer({
   surahNumber,
   currentAyahIndex,
@@ -65,6 +66,7 @@ export default function QuranPlayer({
       .catch((err) => {
         console.error('Failed to fetch surahs:', err);
         setErrorMessage(t(lang, 'unableSurah'));
+
       });
   }, []);
 
@@ -102,6 +104,7 @@ export default function QuranPlayer({
       .catch((err) => {
         console.error('Failed to fetch ayahs:', err);
         setErrorMessage(t(lang, 'unableAyah'));
+
       });
   }, [surahNumber, translationEdition, showTransliteration, onAyahChange]);
 
@@ -233,6 +236,7 @@ export default function QuranPlayer({
           <div className="controls">
             <div style={{ marginTop: '0.5rem' }}>
               <label htmlFor="speed-select">{t(lang, 'speed')}:</label>{' '}
+
               <select
                 id="speed-select"
                 value={playbackRate}
@@ -250,6 +254,7 @@ export default function QuranPlayer({
                 {t(lang, 'previous')}
               </button>{' '}
               <button onClick={playAudio}>{t(lang, 'play')}</button>{' '}
+
               <button
                 onClick={nextAyah}
                 disabled={currentAyahIndex === ayahs.length - 1}
@@ -257,6 +262,7 @@ export default function QuranPlayer({
                 {t(lang, 'next')}
               </button>{' '}
               <button onClick={repeatAyah}>{t(lang, 'repeat')}</button>
+
             </div>
             <div style={{ marginTop: '0.5rem' }}>
               <label>
@@ -270,6 +276,7 @@ export default function QuranPlayer({
             </div>
             <div style={{ marginTop: '0.5rem' }}>
               <label>{t(lang, 'range')}: </label>
+
               <input
                 type="number"
                 min="1"
@@ -294,6 +301,7 @@ export default function QuranPlayer({
                   onChange={(e) => setLoopRange(e.target.checked)}
                 />{' '}
                 {t(lang, 'loopRange')}
+
               </label>
             </div>
           </div>
