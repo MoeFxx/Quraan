@@ -4,3 +4,21 @@ body {
   padding: 0;
   text-align: center;
 }
+
+.app {
+  min-height: 100vh;
+}
+
+.light-theme {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+.dark-theme {
+  background-color: #121212;
+  color: #ffffff;
+}
+
+.controls {
+  margin-bottom: 1rem;
+}
