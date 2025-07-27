@@ -7,6 +7,7 @@ export default function QuranPlayer() {
   const [surahNumber, setSurahNumber] = useState(1);
   const [ayahs, setAyahs] = useState([]);
   const [currentAyahIndex, setCurrentAyahIndex] = useState(0);
+  const [errorMessage, setErrorMessage] = useState('');
   const audioRef = useRef(null);
 
   // Load saved state on mount so the user can resume where they left off
@@ -27,9 +28,15 @@ export default function QuranPlayer() {
       .then((data) => {
         if (data.data) {
           setSurahs(data.data);
+          setErrorMessage('');
         }
       })
-      .catch((err) => console.error('Failed to fetch surahs:', err));
+      .catch((err) => {
+        console.error('Failed to fetch surahs:', err);
+        setErrorMessage(
+          'Unable to load surahs. Please check your connection and try again.'
+        );
+      });
   }, []);
 
   useEffect(() => {
@@ -45,9 +52,15 @@ export default function QuranPlayer() {
           } else {
             setCurrentAyahIndex(0);
           }
+          setErrorMessage('');
         }
       })
-      .catch((err) => console.error('Failed to fetch ayahs:', err));
+      .catch((err) => {
+        console.error('Failed to fetch ayahs:', err);
+        setErrorMessage(
+          'Unable to load verses for this surah. Please try again later.'
+        );
+      });
   }, [surahNumber]);
 
   const playAudio = () => {
@@ -85,8 +98,9 @@ export default function QuranPlayer() {
   }, [currentAyahIndex]);
 
   return (
-    <div>
+    <div className="quran-player">
       <h2>Quran Player</h2>
+      {errorMessage && <p className="error">{errorMessage}</p>}
       <div>
         <label htmlFor="surah-select">Surah:</label>{' '}
         <select
@@ -103,14 +117,14 @@ export default function QuranPlayer() {
       </div>
 
       {ayahs.length > 0 && (
-        <div style={{ marginTop: '1rem' }}>
+        <div className="player-section">
           <p>{ayahs[currentAyahIndex].text}</p>
           <audio
             ref={audioRef}
             controls
             src={ayahs[currentAyahIndex].audio}
           />
-          <div style={{ marginTop: '0.5rem' }}>
+          <div className="controls">
             <button onClick={prevAyah} disabled={currentAyahIndex === 0}>
               Previous
             </button>{' '}
