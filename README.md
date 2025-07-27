@@ -41,5 +41,5 @@ npm run preview
 
 ## Usage
 
-The app currently renders a single heading. Modify `src/App.jsx` to start building your application.
+The app now includes a simple Quran player that fetches surah and ayah data from [Al Quran Cloud](https://alquran.cloud/api) and allows audio playback with navigation controls. Modify `src/components/QuranPlayer.jsx` to extend the functionality further.
 
