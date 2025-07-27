@@ -12,6 +12,18 @@ export default function QuranPlayer({
   const [ayahs, setAyahs] = useState([]);
   const audioRef = useRef(null);
 
+  // Load saved state on mount so the user can resume where they left off
+  useEffect(() => {
+    const savedSurah = Number(localStorage.getItem('surahNumber'));
+    const savedIndex = Number(localStorage.getItem('currentAyahIndex'));
+    if (!Number.isNaN(savedSurah) && savedSurah > 0) {
+      setSurahNumber(savedSurah);
+    }
+    if (!Number.isNaN(savedIndex) && savedIndex >= 0) {
+      setCurrentAyahIndex(savedIndex);
+    }
+  }, []);
+
   useEffect(() => {
     fetch(`${API_BASE}/surah`)
       .then((res) => res.json())
@@ -30,6 +42,14 @@ export default function QuranPlayer({
         if (data.data && data.data.ayahs) {
           setAyahs(data.data.ayahs);
           onAyahChange(0);
+
+          const savedSurah = Number(localStorage.getItem('surahNumber'));
+          const savedIndex = Number(localStorage.getItem('currentAyahIndex'));
+          if (surahNumber === savedSurah && !Number.isNaN(savedIndex)) {
+            setCurrentAyahIndex(Math.min(savedIndex, data.data.ayahs.length - 1));
+          } else {
+            setCurrentAyahIndex(0);
+          }
         }
       })
       .catch((err) => console.error('Failed to fetch ayahs:', err));
@@ -53,6 +73,15 @@ export default function QuranPlayer({
       audioRef.current.play();
     }
   };
+
+  // Persist surah and ayah index so progress is saved between sessions
+  useEffect(() => {
+    localStorage.setItem('surahNumber', String(surahNumber));
+  }, [surahNumber]);
+
+  useEffect(() => {
+    localStorage.setItem('currentAyahIndex', String(currentAyahIndex));
+  }, [currentAyahIndex]);
 
   useEffect(() => {
     if (audioRef.current) {
